@@ -1,0 +1,825 @@
+{% raw %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIKI Timetable Scheduler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0f14;
+  --bg2:#161820;
+  --bg3:#1e2028;
+  --bg4:#252830;
+  --border:#2e313d;
+  --border2:#3a3e50;
+  --text:#e8e9f0;
+  --text2:#9a9cb0;
+  --text3:#5e6180;
+  --purple:#7c6ff7;
+  --purple-dim:#4a4699;
+  --purple-bg:#1a1930;
+  --teal:#3dcfaa;
+  --teal-bg:#0d2821;
+  --amber:#f0a830;
+  --amber-bg:#2a1f08;
+  --red:#f05a5a;
+  --red-bg:#2a0f0f;
+  --green:#6dcc7a;
+  --green-bg:#0d2412;
+  --blue:#5aabf0;
+  --blue-bg:#0d1f2a;
+  --radius:10px;
+  --radius-sm:6px;
+}
+html,body{height:100%;font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+
+/* Layout */
+.app{display:grid;grid-template-columns:64px 260px 1fr;grid-template-rows:100vh;height:100vh}
+
+/* Sidebar icon nav */
+.sidenav{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px;z-index:10}
+.sidenav-logo{width:36px;height:36px;border-radius:10px;background:var(--purple);display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:18px;font-weight:800;color:#fff;letter-spacing:-1px;flex-shrink:0}
+.nav-icon{width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);transition:all .15s;position:relative;font-size:18px}
+.nav-icon:hover{background:var(--bg3);color:var(--text2)}
+.nav-icon.active{background:var(--purple-bg);color:var(--purple)}
+.nav-icon .tooltip{position:absolute;left:52px;background:var(--bg4);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;border:1px solid var(--border2);z-index:100}
+.nav-icon:hover .tooltip{opacity:1}
+.sidenav-spacer{flex:1}
+
+/* Panel nav */
+.panel-nav{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-nav-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.panel-nav-header h2{font-size:15px;font-weight:700;color:var(--text)}
+.panel-nav-header p{font-size:12px;color:var(--text3);margin-top:3px}
+.panel-nav-body{flex:1;overflow-y:auto;padding:12px}
+
+/* Main area */
+.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.main-header{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg2)}
+.main-header h1{font-size:16px;font-weight:700}
+.main-body{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px}
+.card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h3{font-size:13px;font-weight:600;color:var(--text)}
+.card-body{padding:16px}
+
+/* Forms */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;padding:8px 10px;width:100%;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--purple)}
+select option{background:var(--bg3)}
+.checkbox-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.checkbox-item{display:flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 8px;cursor:pointer;font-size:12px;transition:border-color .15s}
+.checkbox-item:hover{border-color:var(--border2)}
+.checkbox-item input[type=checkbox]{width:auto;accent-color:var(--purple)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:#6a5ee0}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--border2)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid transparent;padding:4px 8px;font-size:12px}
+.btn-danger:hover{background:var(--red-bg);border-color:var(--red)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-generate{background:linear-gradient(135deg,var(--purple),#9b6ff7);color:#fff;padding:12px 24px;font-size:14px;border-radius:var(--radius);width:100%;justify-content:center;margin-top:8px}
+.btn-generate:hover{opacity:.9;transform:translateY(-1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* Badges / tags */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-lecture{background:var(--purple-bg);color:var(--purple)}
+.badge-lab{background:var(--teal-bg);color:var(--teal)}
+.badge-tutorial{background:var(--amber-bg);color:var(--amber)}
+.badge-classroom{background:var(--bg3);color:var(--text2)}
+.badge-lecture_hall{background:var(--blue-bg);color:var(--blue)}
+.badge-ok{background:var(--green-bg);color:var(--green)}
+.badge-error{background:var(--red-bg);color:var(--red)}
+
+/* Item list */
+.item-list{display:flex;flex-direction:column;gap:6px}
+.item-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px}
+.item-row-left{display:flex;flex-direction:column;gap:2px}
+.item-name{font-size:13px;font-weight:500}
+.item-meta{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.item-actions{display:flex;align-items:center;gap:6px}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.stat-val{font-size:26px;font-weight:700;font-family:'DM Mono',monospace}
+.stat-label{font-size:11px;color:var(--text3);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+
+/* Summary bar */
+.summary-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.summary-chip{display:flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px}
+.summary-chip .num{font-weight:700;font-family:'DM Mono',monospace;color:var(--purple)}
+
+/* Progress / loading */
+.loading-overlay{position:fixed;inset:0;background:rgba(14,15,20,.85);display:flex;align-items:center;justify-content:center;z-index:1000;display:none}
+.loading-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:32px 40px;text-align:center}
+.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Timetable grid */
+.tt-container{overflow-x:auto}
+.tt-table{border-collapse:collapse;min-width:700px;width:100%}
+.tt-table th,
+.tt-table td{border:1px solid var(--border);padding:0;vertical-align:top}
+.tt-table th{background:var(--bg3);padding:8px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);text-align:center;white-space:nowrap}
+.tt-time-col{background:var(--bg3);padding:8px 10px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);white-space:nowrap;text-align:right;min-width:68px}
+.tt-slot{min-height:52px;padding:4px;background:var(--bg2);vertical-align:top;position:relative}
+.tt-slot.empty{background:var(--bg)}
+.tt-class-block{border-radius:5px;padding:5px 7px;margin-bottom:3px;cursor:pointer;transition:opacity .15s}
+.tt-class-block:hover{opacity:.8}
+.tt-class-block.lecture{background:#1f1b40;border-left:3px solid var(--purple)}
+.tt-class-block.lab{background:#0d2821;border-left:3px solid var(--teal)}
+.tt-class-block.tutorial{background:#2a1f08;border-left:3px solid var(--amber)}
+.tt-class-name{font-size:10px;font-weight:600;line-height:1.3;color:var(--text)}
+.tt-class-meta{font-size:9px;color:var(--text3);margin-top:1px;font-family:'DM Mono',monospace}
+.tt-break{background:var(--bg);min-height:28px;display:flex;align-items:center;justify-content:center}
+.tt-break span{font-size:10px;color:var(--text3)}
+
+/* Section filter tabs */
+.section-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.section-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .15s}
+.section-tab:hover{border-color:var(--border2);color:var(--text)}
+.section-tab.active{background:var(--purple-bg);border-color:var(--purple);color:var(--purple)}
+
+/* Toast */
+.toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:2000}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;animation:toastIn .2s ease;display:flex;align-items:center;gap:8px;min-width:240px;max-width:360px}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--blue)}
+@keyframes toastIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+
+/* Validation results */
+.validation-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:6px}
+.validation-ok{background:var(--green-bg);color:var(--green)}
+.validation-err{background:var(--red-bg);color:var(--red)}
+
+/* Demo button */
+.demo-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);background:var(--amber-bg);border:1px solid var(--amber);color:var(--amber);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.demo-btn:hover{background:rgba(240,168,48,.15)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* Responsive panel hide */
+.page{display:none}
+.page.active{display:block}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-state .icon{font-size:40px;margin-bottom:12px;opacity:.5}
+.empty-state p{font-size:13px}
+
+/* Modal overlay for class detail */
+.modal{position:fixed;inset:0;background:rgba(14,15,20,.8);z-index:500;display:none;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;max-width:440px;width:90%}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:16px}
+.modal-field{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.modal-field:last-child{border-bottom:none}
+.modal-key{color:var(--text3);font-size:12px;font-weight:600}
+.modal-val{color:var(--text);font-weight:500}
+
+/* Conflict warning */
+.conflict-warning{background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:14px}
+.no-conflict{background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--green);margin-bottom:14px}
+
+.divider{height:1px;background:var(--border);margin:14px 0}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px}
+
+.nav-list-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text2);margin-bottom:2px;transition:all .15s}
+.nav-list-item:hover{background:var(--bg3);color:var(--text)}
+.nav-list-item.active{background:var(--purple-bg);color:var(--purple)}
+.nav-list-item .icon{font-size:15px;width:20px;text-align:center}
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Icon sidebar -->
+  <nav class="sidenav">
+    <div class="sidenav-logo">GK</div>
+    <div class="nav-icon active" onclick="setPage('dashboard')" id="ni-dashboard">
+      🏠<span class="tooltip">Dashboard</span>
+    </div>
+    <div class="nav-icon" onclick="setPage('courses')" id="ni-courses">
+      📚<span class="tooltip">Courses</span>
+    </div>
+    <div class="nav-icon" onclick="setPage('teachers')" id="ni-teachers">
+      👩‍🏫<span class="tooltip">Teachers</span>
+    </div>
+    <div class="nav-icon" onclick="setPage('rooms')" id="ni-rooms">
+      🏛️<span class="tooltip">Rooms</span>
+    </div>
+    <div class="nav-icon" onclick="setPage('sections')" id="ni-sections">
+      👥<span class="tooltip">Sections</span>
+    </div>
+    <div class="sidenav-spacer"></div>
+    <div class="nav-icon" onclick="setPage('schedule')" id="ni-schedule">
+      📅<span class="tooltip">Timetable</span>
+    </div>
+    <div class="nav-icon" onclick="setPage('generate')" id="ni-generate">
+      ⚡<span class="tooltip">Generate</span>
+    </div>
+  </nav>
+
+  <!-- Panel nav (context panel) -->
+  <div class="panel-nav" id="panel-nav">
+    <div class="panel-nav-header">
+      <h2 id="panel-title">Dashboard</h2>
+      <p id="panel-sub">GIKI Timetable System</p>
+    </div>
+    <div class="panel-nav-body" id="panel-body">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <main class="main">
+    <div class="main-header">
+      <h1 id="main-title">Dashboard</h1>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="demo-btn" onclick="loadDemo()">⚡ Load Demo Data</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetAll()" style="color:var(--red)">↺ Reset All</button>
+      </div>
+    </div>
+    <div class="main-body" id="main-body">
+      <!-- Filled by JS -->
+    </div>
+  </main>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div style="font-size:15px;font-weight:600">Generating Schedule</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:6px" id="loading-msg">Running DSatur algorithm...</div>
+  </div>
+</div>
+
+<!-- Class detail modal -->
+<div class="modal" id="detail-modal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="modal-title" id="modal-title">Class Details</div>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const API = '';
+let currentPage = 'dashboard';
+let scheduleData = [];
+let statsData = {};
+let selectedSection = 'all';
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+
+async function api(method, path, body) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  return r.json();
+}
+
+function toast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = (type==='success'?'✅':type==='error'?'❌':'ℹ️') + ' ' + msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function showLoading(msg='Running DSatur algorithm...') {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('loading-msg').textContent = msg;
+}
+function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+
+function closeModal() { document.getElementById('detail-modal').classList.remove('open'); }
+
+function badge(type) {
+  const map = {lecture:'badge-lecture',lab:'badge-lab',tutorial:'badge-tutorial',classroom:'badge-classroom',lecture_hall:'badge-lecture_hall'};
+  return `<span class="badge ${map[type]||'badge-classroom'}">${type}</span>`;
+}
+
+// ── Page routing ─────────────────────────────────────────────────────────────
+
+function setPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
+  const ni = document.getElementById('ni-' + page);
+  if (ni) ni.classList.add('active');
+  const titles = {dashboard:'Dashboard',courses:'Courses',teachers:'Teachers',rooms:'Rooms',sections:'Sections',schedule:'Timetable View',generate:'Generate Schedule'};
+  const subs = {dashboard:'GIKI overview & quick stats',courses:'Manage course catalog',teachers:'Assign teachers to courses',rooms:'Rooms & labs',sections:'Student sections & enrollments',schedule:'View generated timetable',generate:'Run scheduling algorithm'};
+  document.getElementById('main-title').textContent = titles[page]||page;
+  document.getElementById('panel-title').textContent = titles[page]||page;
+  document.getElementById('panel-sub').textContent = subs[page]||'';
+  const renders = {dashboard:renderDashboard,courses:renderCourses,teachers:renderTeachers,rooms:renderRooms,sections:renderSections,schedule:renderSchedule,generate:renderGenerate};
+  if (renders[page]) renders[page]();
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────────────
+
+async function renderDashboard() {
+  const summary = await api('GET','/api/summary');
+  document.getElementById('panel-body').innerHTML = `
+    <div class="section-label">Quick nav</div>
+    ${['courses','teachers','rooms','sections','generate','schedule'].map(p => `
+      <div class="nav-list-item" onclick="setPage('${p}')">
+        <span class="icon">${{courses:'📚',teachers:'👩‍🏫',rooms:'🏛️',sections:'👥',generate:'⚡',schedule:'📅'}[p]}</span>
+        ${p.charAt(0).toUpperCase()+p.slice(1)}
+      </div>`).join('')}
+  `;
+  document.getElementById('main-body').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" style="color:var(--purple)">${summary.courses}</div><div class="stat-label">Courses</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--teal)">${summary.teachers}</div><div class="stat-label">Teachers</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${summary.rooms}</div><div class="stat-label">Rooms</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--blue)">${summary.sections}</div><div class="stat-label">Sections</div></div>
+    </div>
+    ${summary.schedule_ready ? `
+      <div class="no-conflict">✅ Schedule is generated and ready to view. <span style="cursor:pointer;text-decoration:underline" onclick="setPage('schedule')">View timetable →</span></div>
+    ` : `
+      <div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--amber);margin-bottom:14px">
+        ⚠ No schedule generated yet. Add data then go to Generate.
+      </div>
+    `}
+    <div class="card">
+      <div class="card-header"><h3>Getting Started</h3></div>
+      <div class="card-body" style="font-size:13px;color:var(--text2);line-height:1.8">
+        <b style="color:var(--text)">Step 1</b> — Add your <span onclick="setPage('courses')" style="color:var(--purple);cursor:pointer">Courses</span> (lectures, labs, tutorials)<br>
+        <b style="color:var(--text)">Step 2</b> — Add <span onclick="setPage('teachers')" style="color:var(--teal);cursor:pointer">Teachers</span> and assign them to courses<br>
+        <b style="color:var(--text)">Step 3</b> — Add <span onclick="setPage('rooms')" style="color:var(--amber);cursor:pointer">Rooms</span> (classrooms, labs, lecture halls)<br>
+        <b style="color:var(--text)">Step 4</b> — Create <span onclick="setPage('sections')" style="color:var(--blue);cursor:pointer">Sections</span> and enroll them in courses<br>
+        <b style="color:var(--text)">Step 5</b> — Hit <span onclick="setPage('generate')" style="color:var(--purple);cursor:pointer">Generate</span> — DSatur + Kempe chains do the rest ⚡<br>
+        <br>
+        <i style="color:var(--text3)">Or click "Load Demo Data" to try it instantly with GIKI sample data.</i>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Algorithm</h3></div>
+      <div class="card-body" style="font-size:12px;color:var(--text2);line-height:1.9">
+        <b style="color:var(--purple)">Phase 1 — DSatur</b> O(V²): Greedily colors the conflict graph, always picking the session with the highest saturation degree next. Guarantees all hard constraints are met.<br>
+        <b style="color:var(--teal)">Phase 2 — Kempe Chains</b> O(K·(V+E)): Iteratively swaps color-pairs along isolated subgraphs to reduce soft-constraint penalties (gaps, back-to-backs, workload imbalance) without breaking any hard constraint.
+      </div>
+    </div>
+  `;
+}
+
+// ── Courses ──────────────────────────────────────────────────────────────────
+
+async function renderCourses() {
+  const courses = await api('GET','/api/courses');
+  document.getElementById('panel-body').innerHTML = `
+    <div class="section-label">Add course</div>
+    <div class="form-grid" style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group"><label>Course ID</label><input id="c-id" placeholder="e.g. CS301"></div>
+      <div class="form-group"><label>Course Name</label><input id="c-name" placeholder="e.g. Data Structures"></div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="c-type"><option value="lecture">Lecture</option><option value="lab">Lab</option><option value="tutorial">Tutorial</option></select>
+      </div>
+      <div class="form-group"><label>Sessions / week</label><input id="c-sessions" type="number" value="2" min="1" max="5"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addCourse()">+ Add Course</button>
+    </div>
+  `;
+  document.getElementById('main-body').innerHTML = `
+    <div class="section-label">${courses.length} course${courses.length!==1?'s':''} added</div>
+    <div class="item-list" id="course-list">
+      ${courses.length ? courses.map(c => `
+        <div class="item-row">
+          <div class="item-row-left">
+            <div class="item-name">${c.name}</div>
+            <div class="item-meta">${c.id} · ${c.sessions_per_week}×/wk ${badge(c.session_type)}</div>
+          </div>
+          <div class="item-actions">
+            <button class="btn btn-danger" onclick="deleteCourse('${c.id}')">🗑</button>
+          </div>
+        </div>`).join('') : '<div class="empty-state"><div class="icon">📚</div><p>No courses yet. Add one from the panel.</p></div>'}
+    </div>
+  `;
+}
+
+async function addCourse() {
+  const id = document.getElementById('c-id').value.trim();
+  const name = document.getElementById('c-name').value.trim();
+  const session_type = document.getElementById('c-type').value;
+  const sessions_per_week = document.getElementById('c-sessions').value;
+  if (!id || !name) { toast('Fill in all fields','error'); return; }
+  const r = await api('POST','/api/courses',{id,name,session_type,sessions_per_week});
+  if (r.error) { toast(r.error,'error'); return; }
+  toast(`Course "${name}" added`,'success');
+  ['c-id','c-name'].forEach(f => document.getElementById(f).value='');
+  renderCourses();
+}
+
+async function deleteCourse(id) {
+  await api('DELETE',`/api/courses/${id}`);
+  toast('Course deleted');
+  renderCourses();
+}
+
+// ── Teachers ─────────────────────────────────────────────────────────────────
+
+async function renderTeachers() {
+  const [teachers, courses] = await Promise.all([api('GET','/api/teachers'), api('GET','/api/courses')]);
+  document.getElementById('panel-body').innerHTML = `
+    <div class="section-label">Add teacher</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group"><label>Teacher ID</label><input id="t-id" placeholder="e.g. T001"></div>
+      <div class="form-group"><label>Full Name</label><input id="t-name" placeholder="e.g. Dr. Ahmed Khan"></div>
+      <div class="form-group">
+        <label>Assigned Courses</label>
+        <div class="checkbox-group" id="t-courses">
+          ${courses.map(c=>`<label class="checkbox-item"><input type="checkbox" value="${c.id}"> ${c.id} – ${c.name}</label>`).join('')}
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addTeacher()">+ Add Teacher</button>
+    </div>
+  `;
+  document.getElementById('main-body').innerHTML = `
+    <div class="section-label">${teachers.length} teacher${teachers.length!==1?'s':''} added</div>
+    <div class="item-list">
+      ${teachers.length ? teachers.map(t => `
+        <div class="item-row">
+          <div class="item-row-left">
+            <div class="item-name">${t.name}</div>
+            <div class="item-meta">${t.id} · Courses: ${t.course_ids.join(', ')||'none'}</div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteTeacher('${t.id}')">🗑</button>
+        </div>`).join('') : '<div class="empty-state"><div class="icon">👩‍🏫</div><p>No teachers yet.</p></div>'}
+    </div>
+  `;
+}
+
+async function addTeacher() {
+  const id = document.getElementById('t-id').value.trim();
+  const name = document.getElementById('t-name').value.trim();
+  const course_ids = [...document.querySelectorAll('#t-courses input:checked')].map(c=>c.value);
+  if (!id||!name) { toast('Fill in all fields','error'); return; }
+  const r = await api('POST','/api/teachers',{id,name,course_ids});
+  if (r.error) { toast(r.error,'error'); return; }
+  toast(`Teacher "${name}" added`,'success');
+  renderTeachers();
+}
+
+async function deleteTeacher(id) {
+  await api('DELETE',`/api/teachers/${id}`);
+  toast('Teacher removed');
+  renderTeachers();
+}
+
+// ── Rooms ─────────────────────────────────────────────────────────────────────
+
+async function renderRooms() {
+  const rooms = await api('GET','/api/rooms');
+  document.getElementById('panel-body').innerHTML = `
+    <div class="section-label">Add room</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group"><label>Room ID</label><input id="r-id" placeholder="e.g. LH1"></div>
+      <div class="form-group"><label>Room Name</label><input id="r-name" placeholder="e.g. Lecture Hall 1"></div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="r-type"><option value="classroom">Classroom</option><option value="lecture_hall">Lecture Hall</option><option value="lab">Lab</option></select>
+      </div>
+      <div class="form-group"><label>Capacity</label><input id="r-cap" type="number" value="40" min="1"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addRoom()">+ Add Room</button>
+    </div>
+  `;
+  document.getElementById('main-body').innerHTML = `
+    <div class="section-label">${rooms.length} room${rooms.length!==1?'s':''} added</div>
+    <div class="item-list">
+      ${rooms.length ? rooms.map(r=>`
+        <div class="item-row">
+          <div class="item-row-left">
+            <div class="item-name">${r.name}</div>
+            <div class="item-meta">${r.id} · Cap: ${r.capacity} ${badge(r.room_type)}</div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteRoom('${r.id}')">🗑</button>
+        </div>`).join('') : '<div class="empty-state"><div class="icon">🏛️</div><p>No rooms yet.</p></div>'}
+    </div>
+  `;
+}
+
+async function addRoom() {
+  const id=document.getElementById('r-id').value.trim();
+  const name=document.getElementById('r-name').value.trim();
+  const room_type=document.getElementById('r-type').value;
+  const capacity=document.getElementById('r-cap').value;
+  if (!id||!name) { toast('Fill in all fields','error'); return; }
+  const r = await api('POST','/api/rooms',{id,name,room_type,capacity});
+  if (r.error) { toast(r.error,'error'); return; }
+  toast(`Room "${name}" added`,'success');
+  renderRooms();
+}
+
+async function deleteRoom(id) {
+  await api('DELETE',`/api/rooms/${id}`);
+  toast('Room removed');
+  renderRooms();
+}
+
+// ── Sections ──────────────────────────────────────────────────────────────────
+
+async function renderSections() {
+  const [sections, courses] = await Promise.all([api('GET','/api/sections'), api('GET','/api/courses')]);
+  document.getElementById('panel-body').innerHTML = `
+    <div class="section-label">Add section</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group"><label>Section ID</label><input id="s-id" placeholder="e.g. CS-3A"></div>
+      <div class="form-group"><label>Section Name</label><input id="s-name" placeholder="e.g. CS Batch 3 - Section A"></div>
+      <div class="form-group"><label>Student Count</label><input id="s-count" type="number" value="35" min="1"></div>
+      <div class="form-group">
+        <label>Enrolled Courses</label>
+        <div class="checkbox-group" id="s-courses" style="max-height:200px;overflow-y:auto">
+          ${courses.map(c=>`<label class="checkbox-item"><input type="checkbox" value="${c.id}"> ${c.id} – ${c.name}</label>`).join('')}
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addSection()">+ Add Section</button>
+    </div>
+  `;
+  document.getElementById('main-body').innerHTML = `
+    <div class="section-label">${sections.length} section${sections.length!==1?'s':''} added</div>
+    <div class="item-list">
+      ${sections.length ? sections.map(s=>`
+        <div class="item-row">
+          <div class="item-row-left">
+            <div class="item-name">${s.name}</div>
+            <div class="item-meta">${s.id} · ${s.student_count} students · ${s.course_ids.length} courses</div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteSection('${s.id}')">🗑</button>
+        </div>`).join('') : '<div class="empty-state"><div class="icon">👥</div><p>No sections yet.</p></div>'}
+    </div>
+  `;
+}
+
+async function addSection() {
+  const id=document.getElementById('s-id').value.trim();
+  const name=document.getElementById('s-name').value.trim();
+  const student_count=document.getElementById('s-count').value;
+  const course_ids=[...document.querySelectorAll('#s-courses input:checked')].map(c=>c.value);
+  if (!id||!name) { toast('Fill in all fields','error'); return; }
+  const r = await api('POST','/api/sections',{id,name,student_count,course_ids});
+  if (r.error) { toast(r.error,'error'); return; }
+  toast(`Section "${name}" added`,'success');
+  renderSections();
+}
+
+async function deleteSection(id) {
+  await api('DELETE',`/api/sections/${id}`);
+  toast('Section removed');
+  renderSections();
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+
+function renderGenerate() {
+  document.getElementById('panel-body').innerHTML = `
+    <div class="section-label">Algorithm settings</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:16px">
+      <b style="color:var(--purple)">Phase 1: DSatur</b><br>
+      Saturation-degree greedy coloring. Picks the most-constrained session first. Guarantees zero hard-constraint violations.
+      <div class="divider"></div>
+      <b style="color:var(--teal)">Phase 2: Kempe Chains</b><br>
+      400 iterations of color-pair swaps across isolated subgraphs. Reduces student gaps, back-to-back sessions, and faculty imbalance without breaking any hard constraint.
+    </div>
+    <div class="section-label">Complexity</div>
+    <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);line-height:2">
+      DSatur: O(V²) = 90,000 ops<br>
+      Kempe:  O(K·(V+E)) = 1.8M ops<br>
+      Brute:  O(40³⁰⁰) = ∞
+    </div>
+  `;
+  document.getElementById('main-body').innerHTML = `
+    <div class="card">
+      <div class="card-header"><h3>Pre-flight check</h3></div>
+      <div class="card-body" id="preflight-body">Loading...</div>
+    </div>
+    <button class="btn btn-generate" id="gen-btn" onclick="generateSchedule()">⚡ Generate Timetable</button>
+    <div id="gen-result" style="margin-top:16px"></div>
+  `;
+  loadPreflightCheck();
+}
+
+async function loadPreflightCheck() {
+  const s = await api('GET','/api/summary');
+  const checks = [
+    {label:`Courses (${s.courses})`, ok: s.courses>0, msg: s.courses>0?'Ready':'Add at least one course'},
+    {label:`Teachers (${s.teachers})`, ok: s.teachers>0, msg: s.teachers>0?'Ready':'Add at least one teacher'},
+    {label:`Rooms (${s.rooms})`, ok: s.rooms>0, msg: s.rooms>0?'Ready':'Add at least one room'},
+    {label:`Sections (${s.sections})`, ok: s.sections>0, msg: s.sections>0?'Ready':'Add at least one section'},
+  ];
+  const allOk = checks.every(c=>c.ok);
+  document.getElementById('preflight-body').innerHTML = checks.map(c=>`
+    <div class="validation-item ${c.ok?'validation-ok':'validation-err'}">
+      ${c.ok?'✅':'❌'} <b>${c.label}</b> — ${c.msg}
+    </div>`).join('');
+  document.getElementById('gen-btn').disabled = !allOk;
+}
+
+async function generateSchedule() {
+  showLoading('Running DSatur graph coloring...');
+  document.getElementById('gen-btn').disabled = true;
+
+  // Simulate phase messages
+  const msgs = ['Running DSatur graph coloring...','Updating saturation degrees...','Running Kempe chain optimization...','Assigning rooms...','Validating constraints...'];
+  let mi = 0;
+  const interval = setInterval(() => {
+    mi = (mi+1)%msgs.length;
+    document.getElementById('loading-msg').textContent = msgs[mi];
+  }, 800);
+
+  const r = await api('POST','/api/generate');
+  clearInterval(interval);
+  hideLoading();
+
+  if (r.error) {
+    toast(r.error,'error');
+    document.getElementById('gen-btn').disabled = false;
+    return;
+  }
+
+  scheduleData = r.schedule;
+  statsData = r.stats;
+
+  const errors = r.validation_errors||[];
+  document.getElementById('gen-result').innerHTML = `
+    <div class="${errors.length?'conflict-warning':'no-conflict'}">
+      ${errors.length ? `⚠ ${errors.length} hard constraint violation(s) detected. Adjust inputs and regenerate.` : '✅ All hard constraints satisfied. Zero conflicts.'}
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" style="color:var(--purple)">${r.stats.total_sessions}</div><div class="stat-label">Sessions</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--teal)">${r.stats.colors_used}</div><div class="stat-label">Slots used</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--${r.stats.hard_conflicts>0?'red':'green'})">${r.stats.hard_conflicts}</div><div class="stat-label">Conflicts</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${r.stats.soft_penalty}</div><div class="stat-label">Soft penalty</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="setPage('schedule')" style="width:100%;justify-content:center">📅 View Timetable →</button>
+  `;
+  toast('Schedule generated!','success');
+  document.getElementById('gen-btn').disabled = false;
+}
+
+// ── Schedule view ─────────────────────────────────────────────────────────────
+
+async function renderSchedule() {
+  if (!scheduleData.length) {
+    const r = await api('GET','/api/schedule');
+    if (r.error) {
+      document.getElementById('main-body').innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>No schedule yet. Go to Generate first.</p><br><button class="btn btn-primary" onclick="setPage('generate')">Go to Generate</button></div>`;
+      document.getElementById('panel-body').innerHTML = '';
+      return;
+    }
+    scheduleData = r.schedule;
+    statsData = r.stats;
+  }
+
+  // Get unique sections
+  const sectionIds = [...new Set(scheduleData.map(s=>s.section_id))].sort();
+  const sectionNames = {};
+  scheduleData.forEach(s => sectionNames[s.section_id]=s.section_name);
+
+  // Update panel
+  document.getElementById('panel-body').innerHTML = `
+    <div class="section-label">Filter by section</div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <div class="nav-list-item ${selectedSection==='all'?'active':''}" onclick="filterSection('all')">📋 All sections</div>
+      ${sectionIds.map(sid=>`
+        <div class="nav-list-item ${selectedSection===sid?'active':''}" onclick="filterSection('${sid}')">👥 ${sectionNames[sid]||sid}</div>
+      `).join('')}
+    </div>
+    <div class="divider"></div>
+    <div class="section-label">Stats</div>
+    <div style="font-size:12px;color:var(--text2);line-height:2;font-family:'DM Mono',monospace">
+      Sessions: ${statsData.total_sessions||scheduleData.length}<br>
+      Slots used: ${statsData.colors_used||'—'}<br>
+      Conflicts: <span style="color:var(--${(statsData.hard_conflicts||0)>0?'red':'green'})">${statsData.hard_conflicts||0}</span><br>
+      Soft penalty: ${statsData.soft_penalty||'—'}
+    </div>
+  `;
+
+  buildTimetable(sectionIds);
+}
+
+function filterSection(sid) {
+  selectedSection = sid;
+  renderSchedule();
+}
+
+function buildTimetable(sectionIds) {
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const TIMES = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00'];
+
+  let filtered = scheduleData;
+  if (selectedSection !== 'all') filtered = filtered.filter(s=>s.section_id===selectedSection);
+
+  // Index: day → time → entries
+  const idx = {};
+  DAYS.forEach(d => { idx[d]={}; TIMES.forEach(t => idx[d][t]=[]); });
+  filtered.forEach(s => { if(idx[s.day]&&idx[s.day][s.time]) idx[s.day][s.time].push(s); });
+
+  const typeClass = {lecture:'lecture',lab:'lab',tutorial:'tutorial'};
+
+  const rows = TIMES.map(time => {
+    const isLunch = time==='12:00';
+    const cells = DAYS.map(day => {
+      const entries = idx[day][time]||[];
+      if (isLunch) return `<td class="tt-slot tt-break"><span>Lunch</span></td>`;
+      if (!entries.length) return `<td class="tt-slot empty"></td>`;
+      const blocks = entries.map(e=>`
+        <div class="tt-class-block ${typeClass[e.session_type]||'lecture'}" onclick="showDetail(${JSON.stringify(e).replace(/"/g,'&quot;')})">
+          <div class="tt-class-name">${e.course_name}</div>
+          <div class="tt-class-meta">${e.section_name.split(' - ')[1]||e.section_id} · ${e.room_name||'TBD'}</div>
+        </div>`).join('');
+      return `<td class="tt-slot">${blocks}</td>`;
+    }).join('');
+    return `<tr><td class="tt-time-col">${time}</td>${cells}</tr>`;
+  }).join('');
+
+  document.getElementById('main-body').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;gap:10px;font-size:12px;align-items:center">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#1f1b40;border-left:3px solid var(--purple);display:inline-block"></span>Lecture</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--teal-bg);border-left:3px solid var(--teal);display:inline-block"></span>Lab</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--amber-bg);border-left:3px solid var(--amber);display:inline-block"></span>Tutorial</span>
+      </div>
+      <span style="font-size:11px;color:var(--text3)">Click a class for details</span>
+    </div>
+    <div class="tt-container">
+      <table class="tt-table">
+        <thead><tr>
+          <th style="width:68px">Time</th>
+          ${DAYS.map(d=>`<th>${d}</th>`).join('')}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function showDetail(e) {
+  document.getElementById('modal-title').textContent = e.course_name;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-field"><span class="modal-key">Course ID</span><span class="modal-val">${e.course_id}</span></div>
+    <div class="modal-field"><span class="modal-key">Type</span>${badge(e.session_type)}</div>
+    <div class="modal-field"><span class="modal-key">Teacher</span><span class="modal-val">${e.teacher_name}</span></div>
+    <div class="modal-field"><span class="modal-key">Section</span><span class="modal-val">${e.section_name}</span></div>
+    <div class="modal-field"><span class="modal-key">Room</span><span class="modal-val">${e.room_name||'TBD'} (cap: ${e.room_capacity||'—'})</span></div>
+    <div class="modal-field"><span class="modal-key">Day</span><span class="modal-val">${e.day}</span></div>
+    <div class="modal-field"><span class="modal-key">Time</span><span class="modal-val">${e.time}</span></div>
+    <div class="modal-field"><span class="modal-key">Slot ID</span><span class="modal-val" style="font-family:'DM Mono',monospace">#${e.slot_id}</span></div>
+  `;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+// ── Demo & reset ──────────────────────────────────────────────────────────────
+
+async function loadDemo() {
+  const r = await api('POST','/api/load-demo');
+  if (r.ok) {
+    scheduleData = [];
+    statsData = {};
+    toast('Demo data loaded! Go to Generate to schedule.','success');
+    setPage(currentPage);
+  }
+}
+
+async function resetAll() {
+  if (!confirm('Reset all data?')) return;
+  await api('POST','/api/reset');
+  scheduleData = [];
+  statsData = {};
+  toast('All data cleared');
+  setPage('dashboard');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+setPage('dashboard');
+</script>
+</body>
+</html>
+{% endraw %}
