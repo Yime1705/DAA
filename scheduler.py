@@ -349,9 +349,31 @@ class GIKIScheduler:
                     slot_room_usage[slot].add(room.id)
                     break
 
+    def validate_orphans(self):
+        """Check for courses that cannot be scheduled due to missing links."""
+        orphans = []
+        teacher_by_course = {}
+        for t in self.teachers.values():
+            for cid in t.course_ids:
+                teacher_by_course[cid] = t
+        
+        section_courses = set()
+        for s in self.sections.values():
+            for cid in s.course_ids:
+                section_courses.add(cid)
+
+        for cid, course in self.courses.items():
+            if cid not in teacher_by_course:
+                orphans.append(f"Course '{course.name}' ({cid}) has no teacher assigned.")
+            if cid not in section_courses:
+                orphans.append(f"Course '{course.name}' ({cid}) is not enrolled in any section.")
+        
+        return orphans
+
     # ── Main schedule runner ────────────────────────────────────────────────────
 
     def generate_schedule(self):
+        orphans = self.validate_orphans()
         self._generate_sessions()
         self._build_conflict_graph()
         self._dsatur()
@@ -395,8 +417,8 @@ class GIKIScheduler:
                 "sessions_scheduled": len(results),
                 "colors_used": slots_used,
                 "hard_conflicts": conflicts,
-                "soft_penalty": final_penalty,
                 "days_used": days_used,
+                "orphaned_courses": orphans,
             }
         }
 

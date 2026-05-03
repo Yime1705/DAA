@@ -667,17 +667,26 @@ async function generateSchedule() {
   scheduleData = r.schedule;
   statsData = r.stats;
 
-  const errors = r.validation_errors||[];
-  document.getElementById('gen-result').innerHTML = `
-    <div class="${errors.length?'conflict-warning':'no-conflict'}">
-      ${errors.length ? `⚠ ${errors.length} hard constraint violation(s) detected. Adjust inputs and regenerate.` : '✅ All hard constraints satisfied. Zero conflicts.'}
-    </div>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-val" style="color:var(--purple)">${r.stats.total_sessions}</div><div class="stat-label">Sessions</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--teal)">${r.stats.colors_used}</div><div class="stat-label">Slots used</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--${r.stats.hard_conflicts>0?'red':'green'})">${r.stats.hard_conflicts}</div><div class="stat-label">Conflicts</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${r.stats.soft_penalty}</div><div class="stat-label">Soft penalty</div></div>
-    </div>
+    const errors = r.validation_errors||[];
+    const orphans = r.orphaned_courses||[];
+    document.getElementById('gen-result').innerHTML = `
+      <div class="${errors.length?'conflict-warning':'no-conflict'}">
+        ${errors.length ? `⚠ ${errors.length} hard constraint violation(s) detected.` : '✅ All hard constraints satisfied.'}
+      </div>
+      ${orphans.length ? `
+        <div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--amber);margin-bottom:14px">
+          <b>⚠ Orphaned Courses:</b>
+          <ul style="margin-top:5px;padding-left:18px">
+            ${orphans.map(o=>`<li>${o}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-val" style="color:var(--purple)">${r.stats.total_sessions}</div><div class="stat-label">Sessions</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--teal)">${r.stats.colors_used}</div><div class="stat-label">Slots used</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--${r.stats.hard_conflicts>0?'red':'green'})">${r.stats.hard_conflicts}</div><div class="stat-label">Conflicts</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${r.stats.soft_penalty}</div><div class="stat-label">Soft penalty</div></div>
+      </div>
     <button class="btn btn-primary" onclick="setPage('schedule')" style="width:100%;justify-content:center">📅 View Timetable →</button>
   `;
   toast('Schedule generated!','success');

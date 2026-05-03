@@ -149,7 +149,8 @@ def generate():
         store["last_schedule"] = result["schedule"]
         store["last_stats"] = result["stats"]
         return jsonify({"ok": True, "schedule": result["schedule"],
-                        "stats": result["stats"], "validation_errors": errors})
+                        "stats": result["stats"], "validation_errors": errors,
+                        "orphaned_courses": result["stats"].get("orphaned_courses", [])})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -173,46 +174,86 @@ def reset():
 
 @app.route("/api/load-demo", methods=["POST"])
 def load_demo():
-    store["courses"] = {
-        "CS301": {"id":"CS301","name":"Data Structures","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-        "CS302": {"id":"CS302","name":"Algorithms","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-        "CS303": {"id":"CS303","name":"Object Oriented Programming","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-        "CS304": {"id":"CS304","name":"OOP Lab","sessions_per_week":1,"session_type":"lab","duration_slots":1},
-        "CS305": {"id":"CS305","name":"Database Systems","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-        "CS306": {"id":"CS306","name":"Database Lab","sessions_per_week":1,"session_type":"lab","duration_slots":1},
-        "EE301": {"id":"EE301","name":"Circuit Analysis","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-        "EE302": {"id":"EE302","name":"Signals & Systems","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-        "MATH301":{"id":"MATH301","name":"Calculus III","sessions_per_week":3,"session_type":"lecture","duration_slots":1},
-        "CS401": {"id":"CS401","name":"Cybersecurity","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-        "CS402": {"id":"CS402","name":"AI & Machine Learning","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-        "CS403": {"id":"CS403","name":"Computer Networks","sessions_per_week":2,"session_type":"lecture","duration_slots":1},
-    }
-    store["teachers"] = {
-        "T001":{"id":"T001","name":"Dr. Ahmed Khan","course_ids":["CS301","CS302"],"unavailable_slots":[]},
-        "T002":{"id":"T002","name":"Dr. Sara Malik","course_ids":["CS303","CS304"],"unavailable_slots":[]},
-        "T003":{"id":"T003","name":"Prof. Usman Ali","course_ids":["CS305","CS306"],"unavailable_slots":[]},
-        "T004":{"id":"T004","name":"Dr. Fatima Zahra","course_ids":["EE301","EE302"],"unavailable_slots":[]},
-        "T005":{"id":"T005","name":"Prof. Bilal Rao","course_ids":["MATH301"],"unavailable_slots":[]},
-        "T006":{"id":"T006","name":"Dr. Nadia Hussain","course_ids":["CS401","CS402"],"unavailable_slots":[]},
-        "T007":{"id":"T007","name":"Dr. Tariq Mehmood","course_ids":["CS403"],"unavailable_slots":[]},
-    }
-    store["rooms"] = {
-        "AHA": {"id":"AHA","name":"AHA Auditorium","capacity":300,"room_type":"lecture_hall"},
-        "LH1": {"id":"LH1","name":"Lecture Hall 1","capacity":120,"room_type":"lecture_hall"},
-        "LH2": {"id":"LH2","name":"Lecture Hall 2","capacity":120,"room_type":"lecture_hall"},
-        "CR1": {"id":"CR1","name":"Classroom A-101","capacity":40,"room_type":"classroom"},
-        "CR2": {"id":"CR2","name":"Classroom A-102","capacity":40,"room_type":"classroom"},
-        "CR3": {"id":"CR3","name":"Classroom B-201","capacity":50,"room_type":"classroom"},
-        "LAB1":{"id":"LAB1","name":"CS Lab 1","capacity":40,"room_type":"lab"},
-        "LAB2":{"id":"LAB2","name":"CS Lab 2","capacity":40,"room_type":"lab"},
-        "LAB3":{"id":"LAB3","name":"EE Lab","capacity":25,"room_type":"lab"},
-    }
-    store["sections"] = {
-        "CS-3A":{"id":"CS-3A","name":"CS Batch 3 - Section A","student_count":35,"course_ids":["CS301","CS302","CS303","CS304","MATH301"]},
-        "CS-3B":{"id":"CS-3B","name":"CS Batch 3 - Section B","student_count":35,"course_ids":["CS301","CS302","CS303","CS304","MATH301"]},
-        "CS-4A":{"id":"CS-4A","name":"CS Batch 4 - Section A","student_count":30,"course_ids":["CS305","CS306","CS401","CS402","CS403"]},
-        "EE-3A":{"id":"EE-3A","name":"EE Batch 3 - Section A","student_count":40,"course_ids":["EE301","EE302","MATH301"]},
-    }
+    import random
+    
+    course_names = [
+        ("CS101", "Intro to Computing"), ("CS201", "Programming Fundamentals"),
+        ("CS301", "Data Structures"), ("CS302", "Algorithms"),
+        ("CS303", "Object Oriented Programming"), ("CS304", "OOP Lab"),
+        ("CS305", "Database Systems"), ("CS306", "Database Lab"),
+        ("CS401", "Cybersecurity"), ("CS402", "AI & Machine Learning"),
+        ("CS403", "Computer Networks"), ("CS404", "Software Engineering"),
+        ("EE101", "Circuit Analysis"), ("EE201", "Digital Logic Design"),
+        ("MATH101", "Calculus I"), ("MATH201", "Linear Algebra"),
+        ("HUM101", "Islamic Studies"), ("HUM102", "Pakistan Studies")
+    ]
+    
+    teacher_names = [
+        "Dr. Ahmed Khan", "Dr. Sara Malik", "Prof. Usman Ali", 
+        "Dr. Fatima Zahra", "Prof. Bilal Rao", "Dr. Nadia Hussain", 
+        "Dr. Tariq Mehmood", "Dr. Zeeshan Haider", "Prof. Maryam Bibi"
+    ]
+    
+    room_data = [
+        ("AHA", "AHA Auditorium", 300, "lecture_hall"),
+        ("LH1", "Lecture Hall 1", 120, "lecture_hall"),
+        ("LH2", "Lecture Hall 2", 120, "lecture_hall"),
+        ("CR1", "Classroom A-101", 40, "classroom"),
+        ("CR2", "Classroom A-102", 40, "classroom"),
+        ("CR3", "Classroom B-201", 50, "classroom"),
+        ("LAB1", "CS Lab 1", 40, "lab"),
+        ("LAB2", "CS Lab 2", 40, "lab"),
+        ("LAB3", "EE Lab", 30, "lab")
+    ]
+    
+    sections_list = [
+        ("CS-1A", 40), ("CS-1B", 40), ("CS-3A", 35), ("CS-3B", 35),
+        ("EE-1A", 45), ("MATH-1", 50)
+    ]
+
+    # Randomly select a subset of courses
+    selected_courses = random.sample(course_names, k=min(10, len(course_names)))
+    
+    store["courses"] = {}
+    for cid, name in selected_courses:
+        is_lab = "Lab" in name
+        store["courses"][cid] = {
+            "id": cid, "name": name, 
+            "sessions_per_week": 1 if is_lab else random.randint(2, 3),
+            "session_type": "lab" if is_lab else "lecture",
+            "duration_slots": 1
+        }
+    
+    store["teachers"] = {}
+    shuffled_course_ids = list(store["courses"].keys())
+    random.shuffle(shuffled_course_ids)
+    
+    # Distribute courses among teachers
+    for i, tname in enumerate(teacher_names):
+        tid = f"T{i+1:03d}"
+        # Each teacher gets 1-2 courses
+        start = (i * 2) % len(shuffled_course_ids)
+        assigned = shuffled_course_ids[start:start+2]
+        if assigned:
+            store["teachers"][tid] = {
+                "id": tid, "name": tname, 
+                "course_ids": assigned, 
+                "unavailable_slots": []
+            }
+    
+    store["rooms"] = {}
+    for rid, rname, cap, rtype in room_data:
+        store["rooms"][rid] = {"id": rid, "name": rname, "capacity": cap, "room_type": rtype}
+        
+    store["sections"] = {}
+    for sid, scount in sections_list:
+        # Assign 3-4 random courses to each section
+        store["sections"][sid] = {
+            "id": sid, "name": f"Batch {sid}", 
+            "student_count": scount, 
+            "course_ids": random.sample(list(store["courses"].keys()), k=3)
+        }
+        
     store["last_schedule"] = None
     store["last_stats"] = None
     return jsonify({"ok": True})
