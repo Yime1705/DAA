@@ -218,26 +218,26 @@ select option{background:var(--bg3)}
   <nav class="sidenav">
     <div class="sidenav-logo">GK</div>
     <div class="nav-icon active" onclick="setPage('dashboard')" id="ni-dashboard">
-      🏠<span class="tooltip">Dashboard</span>
+      DB<span class="tooltip">Dashboard</span>
     </div>
     <div class="nav-icon" onclick="setPage('courses')" id="ni-courses">
-      📚<span class="tooltip">Courses</span>
+      CR<span class="tooltip">Courses</span>
     </div>
     <div class="nav-icon" onclick="setPage('teachers')" id="ni-teachers">
-      👩‍🏫<span class="tooltip">Teachers</span>
+      TC<span class="tooltip">Teachers</span>
     </div>
     <div class="nav-icon" onclick="setPage('rooms')" id="ni-rooms">
-      🏛️<span class="tooltip">Rooms</span>
+      RM<span class="tooltip">Rooms</span>
     </div>
     <div class="nav-icon" onclick="setPage('sections')" id="ni-sections">
-      👥<span class="tooltip">Sections</span>
+      SC<span class="tooltip">Sections</span>
     </div>
     <div class="sidenav-spacer"></div>
     <div class="nav-icon" onclick="setPage('schedule')" id="ni-schedule">
-      📅<span class="tooltip">Timetable</span>
+      TT<span class="tooltip">Timetable</span>
     </div>
     <div class="nav-icon" onclick="setPage('generate')" id="ni-generate">
-      ⚡<span class="tooltip">Generate</span>
+      GN<span class="tooltip">Generate</span>
     </div>
   </nav>
 
@@ -257,8 +257,8 @@ select option{background:var(--bg3)}
     <div class="main-header">
       <h1 id="main-title">Dashboard</h1>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="demo-btn" onclick="loadDemo()">⚡ Load Demo Data</button>
-        <button class="btn btn-secondary btn-sm" onclick="resetAll()" style="color:var(--red)">↺ Reset All</button>
+        <button class="demo-btn" onclick="loadDemo()">Load Demo Data</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetAll()" style="color:var(--red)">Reset All</button>
       </div>
     </div>
     <div class="main-body" id="main-body">
@@ -281,7 +281,7 @@ select option{background:var(--bg3)}
   <div class="modal-box">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="modal-title" id="modal-title">Class Details</div>
-      <button class="btn btn-secondary btn-sm" onclick="closeModal()">✕ Close</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
     </div>
     <div id="modal-body"></div>
   </div>
@@ -309,7 +309,7 @@ async function api(method, path, body) {
 function toast(msg, type='info') {
   const t = document.createElement('div');
   t.className = 'toast ' + type;
-  t.innerHTML = (type==='success'?'✅':type==='error'?'❌':'ℹ️') + ' ' + msg;
+  t.innerHTML = (type==='success'?'OK:':type==='error'?'Error:':'Info:') + ' ' + msg;
   document.getElementById('toasts').appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
@@ -351,7 +351,7 @@ async function renderDashboard() {
     <div class="section-label">Quick nav</div>
     ${['courses','teachers','rooms','sections','generate','schedule'].map(p => `
       <div class="nav-list-item" onclick="setPage('${p}')">
-        <span class="icon">${{courses:'📚',teachers:'👩‍🏫',rooms:'🏛️',sections:'👥',generate:'⚡',schedule:'📅'}[p]}</span>
+        <span class="icon">${{courses:'CR',teachers:'TC',rooms:'RM',sections:'SC',generate:'GN',schedule:'TT'}[p]}</span>
         ${p.charAt(0).toUpperCase()+p.slice(1)}
       </div>`).join('')}
   `;
@@ -363,10 +363,10 @@ async function renderDashboard() {
       <div class="stat-card"><div class="stat-val" style="color:var(--blue)">${summary.sections}</div><div class="stat-label">Sections</div></div>
     </div>
     ${summary.schedule_ready ? `
-      <div class="no-conflict">✅ Schedule is generated and ready to view. <span style="cursor:pointer;text-decoration:underline" onclick="setPage('schedule')">View timetable →</span></div>
+      <div class="no-conflict">Schedule is generated and ready to view. <span style="cursor:pointer;text-decoration:underline" onclick="setPage('schedule')">View timetable →</span></div>
     ` : `
       <div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--amber);margin-bottom:14px">
-        ⚠ No schedule generated yet. Add data then go to Generate.
+        No schedule generated yet. Add data then go to Generate.
       </div>
     `}
     <div class="card">
@@ -376,7 +376,7 @@ async function renderDashboard() {
         <b style="color:var(--text)">Step 2</b> — Add <span onclick="setPage('teachers')" style="color:var(--teal);cursor:pointer">Teachers</span> and assign them to courses<br>
         <b style="color:var(--text)">Step 3</b> — Add <span onclick="setPage('rooms')" style="color:var(--amber);cursor:pointer">Rooms</span> (classrooms, labs, lecture halls)<br>
         <b style="color:var(--text)">Step 4</b> — Create <span onclick="setPage('sections')" style="color:var(--blue);cursor:pointer">Sections</span> and enroll them in courses<br>
-        <b style="color:var(--text)">Step 5</b> — Hit <span onclick="setPage('generate')" style="color:var(--purple);cursor:pointer">Generate</span> — DSatur + Kempe chains do the rest ⚡<br>
+        <b style="color:var(--text)">Step 5</b> — Hit <span onclick="setPage('generate')" style="color:var(--purple);cursor:pointer">Generate</span> — DSatur + Kempe chains do the rest<br>
         <br>
         <i style="color:var(--text3)">Or click "Load Demo Data" to try it instantly with GIKI sample data.</i>
       </div>
@@ -418,9 +418,9 @@ async function renderCourses() {
             <div class="item-meta">${c.id} · ${c.sessions_per_week}×/wk ${badge(c.session_type)}</div>
           </div>
           <div class="item-actions">
-            <button class="btn btn-danger" onclick="deleteCourse('${c.id}')">🗑</button>
+            <button class="btn btn-danger" onclick="deleteCourse('${c.id}')">Del</button>
           </div>
-        </div>`).join('') : '<div class="empty-state"><div class="icon">📚</div><p>No courses yet. Add one from the panel.</p></div>'}
+        </div>`).join('') : '<div class="empty-state"><p>No courses yet. Add one from the panel.</p></div>'}
     </div>
   `;
 }
@@ -471,8 +471,8 @@ async function renderTeachers() {
             <div class="item-name">${t.name}</div>
             <div class="item-meta">${t.id} · Courses: ${t.course_ids.join(', ')||'none'}</div>
           </div>
-          <button class="btn btn-danger" onclick="deleteTeacher('${t.id}')">🗑</button>
-        </div>`).join('') : '<div class="empty-state"><div class="icon">👩‍🏫</div><p>No teachers yet.</p></div>'}
+          <button class="btn btn-danger" onclick="deleteTeacher('${t.id}')">Del</button>
+        </div>`).join('') : '<div class="empty-state"><p>No teachers yet.</p></div>'}
     </div>
   `;
 }
@@ -520,8 +520,8 @@ async function renderRooms() {
             <div class="item-name">${r.name}</div>
             <div class="item-meta">${r.id} · Cap: ${r.capacity} ${badge(r.room_type)}</div>
           </div>
-          <button class="btn btn-danger" onclick="deleteRoom('${r.id}')">🗑</button>
-        </div>`).join('') : '<div class="empty-state"><div class="icon">🏛️</div><p>No rooms yet.</p></div>'}
+          <button class="btn btn-danger" onclick="deleteRoom('${r.id}')">Del</button>
+        </div>`).join('') : '<div class="empty-state"><p>No rooms yet.</p></div>'}
     </div>
   `;
 }
@@ -572,8 +572,8 @@ async function renderSections() {
             <div class="item-name">${s.name}</div>
             <div class="item-meta">${s.id} · ${s.student_count} students · ${s.course_ids.length} courses</div>
           </div>
-          <button class="btn btn-danger" onclick="deleteSection('${s.id}')">🗑</button>
-        </div>`).join('') : '<div class="empty-state"><div class="icon">👥</div><p>No sections yet.</p></div>'}
+          <button class="btn btn-danger" onclick="deleteSection('${s.id}')">Del</button>
+        </div>`).join('') : '<div class="empty-state"><p>No sections yet.</p></div>'}
     </div>
   `;
 }
@@ -620,7 +620,7 @@ function renderGenerate() {
       <div class="card-header"><h3>Pre-flight check</h3></div>
       <div class="card-body" id="preflight-body">Loading...</div>
     </div>
-    <button class="btn btn-generate" id="gen-btn" onclick="generateSchedule()">⚡ Generate Timetable</button>
+    <button class="btn btn-generate" id="gen-btn" onclick="generateSchedule()">Generate Timetable</button>
     <div id="gen-result" style="margin-top:16px"></div>
   `;
   loadPreflightCheck();
@@ -637,7 +637,7 @@ async function loadPreflightCheck() {
   const allOk = checks.every(c=>c.ok);
   document.getElementById('preflight-body').innerHTML = checks.map(c=>`
     <div class="validation-item ${c.ok?'validation-ok':'validation-err'}">
-      ${c.ok?'✅':'❌'} <b>${c.label}</b> — ${c.msg}
+      ${c.ok?'OK':'--'} <b>${c.label}</b> — ${c.msg}
     </div>`).join('');
   document.getElementById('gen-btn').disabled = !allOk;
 }
@@ -671,11 +671,11 @@ async function generateSchedule() {
     const orphans = r.orphaned_courses||[];
     document.getElementById('gen-result').innerHTML = `
       <div class="${errors.length?'conflict-warning':'no-conflict'}">
-        ${errors.length ? `⚠ ${errors.length} hard constraint violation(s) detected.` : '✅ All hard constraints satisfied.'}
+        ${errors.length ? `${errors.length} hard constraint violation(s) detected.` : 'All hard constraints satisfied.'}
       </div>
       ${orphans.length ? `
         <div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--amber);margin-bottom:14px">
-          <b>⚠ Orphaned Courses:</b>
+          <b>Orphaned Courses:</b>
           <ul style="margin-top:5px;padding-left:18px">
             ${orphans.map(o=>`<li>${o}</li>`).join('')}
           </ul>
@@ -687,7 +687,7 @@ async function generateSchedule() {
         <div class="stat-card"><div class="stat-val" style="color:var(--${r.stats.hard_conflicts>0?'red':'green'})">${r.stats.hard_conflicts}</div><div class="stat-label">Conflicts</div></div>
         <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${r.stats.soft_penalty}</div><div class="stat-label">Soft penalty</div></div>
       </div>
-    <button class="btn btn-primary" onclick="setPage('schedule')" style="width:100%;justify-content:center">📅 View Timetable →</button>
+    <button class="btn btn-primary" onclick="setPage('schedule')" style="width:100%;justify-content:center">View Timetable →</button>
   `;
   toast('Schedule generated!','success');
   document.getElementById('gen-btn').disabled = false;
@@ -699,7 +699,7 @@ async function renderSchedule() {
   if (!scheduleData.length) {
     const r = await api('GET','/api/schedule');
     if (r.error) {
-      document.getElementById('main-body').innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>No schedule yet. Go to Generate first.</p><br><button class="btn btn-primary" onclick="setPage('generate')">Go to Generate</button></div>`;
+      document.getElementById('main-body').innerHTML = `<div class="empty-state"><p>No schedule yet. Go to Generate first.</p><br><button class="btn btn-primary" onclick="setPage('generate')">Go to Generate</button></div>`;
       document.getElementById('panel-body').innerHTML = '';
       return;
     }
@@ -716,9 +716,9 @@ async function renderSchedule() {
   document.getElementById('panel-body').innerHTML = `
     <div class="section-label">Filter by section</div>
     <div style="display:flex;flex-direction:column;gap:4px">
-      <div class="nav-list-item ${selectedSection==='all'?'active':''}" onclick="filterSection('all')">📋 All sections</div>
+      <div class="nav-list-item ${selectedSection==='all'?'active':''}" onclick="filterSection('all')">All sections</div>
       ${sectionIds.map(sid=>`
-        <div class="nav-list-item ${selectedSection===sid?'active':''}" onclick="filterSection('${sid}')">👥 ${sectionNames[sid]||sid}</div>
+        <div class="nav-list-item ${selectedSection===sid?'active':''}" onclick="filterSection('${sid}')">${sectionNames[sid]||sid}</div>
       `).join('')}
     </div>
     <div class="divider"></div>
