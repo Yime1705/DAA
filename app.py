@@ -203,8 +203,8 @@ def load_demo():
         "CR1": {"id":"CR1","name":"Classroom A-101","capacity":40,"room_type":"classroom"},
         "CR2": {"id":"CR2","name":"Classroom A-102","capacity":40,"room_type":"classroom"},
         "CR3": {"id":"CR3","name":"Classroom B-201","capacity":50,"room_type":"classroom"},
-        "LAB1":{"id":"LAB1","name":"CS Lab 1","capacity":30,"room_type":"lab"},
-        "LAB2":{"id":"LAB2","name":"CS Lab 2","capacity":30,"room_type":"lab"},
+        "LAB1":{"id":"LAB1","name":"CS Lab 1","capacity":40,"room_type":"lab"},
+        "LAB2":{"id":"LAB2","name":"CS Lab 2","capacity":40,"room_type":"lab"},
         "LAB3":{"id":"LAB3","name":"EE Lab","capacity":25,"room_type":"lab"},
     }
     store["sections"] = {
