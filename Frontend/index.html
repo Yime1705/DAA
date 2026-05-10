@@ -741,7 +741,8 @@ function filterSection(sid) {
 
 function buildTimetable(sectionIds) {
   const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-  const TIMES = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00'];
+  const TIMES = ['08:00','09:00','10:30','11:30','12:30','14:30','15:30','16:30'];
+  const BREAK_LABELS = {'10:30':'Tea break (10:00–10:30)','14:30':'Lunch (13:30–14:30)'};
 
   let filtered = scheduleData;
   if (selectedSection !== 'all') filtered = filtered.filter(s=>s.section_id===selectedSection);
@@ -754,19 +755,20 @@ function buildTimetable(sectionIds) {
   const typeClass = {lecture:'lecture',lab:'lab',tutorial:'tutorial'};
 
   const rows = TIMES.map(time => {
-    const isLunch = time==='12:00';
+    const breakBefore = BREAK_LABELS[time]
+      ? `<tr><td colspan="6" class="tt-break" style="text-align:center;font-size:11px;padding:4px;color:var(--text3)">${BREAK_LABELS[time]}</td></tr>`
+      : '';
     const cells = DAYS.map(day => {
       const entries = idx[day][time]||[];
-      if (isLunch) return `<td class="tt-slot tt-break"><span>Lunch</span></td>`;
       if (!entries.length) return `<td class="tt-slot empty"></td>`;
       const blocks = entries.map(e=>`
         <div class="tt-class-block ${typeClass[e.session_type]||'lecture'}" onclick="showDetail(${JSON.stringify(e).replace(/"/g,'&quot;')})">
           <div class="tt-class-name">${e.course_name}</div>
-          <div class="tt-class-meta">${e.section_name.split(' - ')[1]||e.section_id} · ${e.room_name||'TBD'}</div>
+          <div class="tt-class-meta">${e.section_name.split('—')[1]||e.section_id} · ${e.room_name||'TBD'}</div>
         </div>`).join('');
       return `<td class="tt-slot">${blocks}</td>`;
     }).join('');
-    return `<tr><td class="tt-time-col">${time}</td>${cells}</tr>`;
+    return `${breakBefore}<tr><td class="tt-time-col">${time}</td>${cells}</tr>`;
   }).join('');
 
   document.getElementById('main-body').innerHTML = `

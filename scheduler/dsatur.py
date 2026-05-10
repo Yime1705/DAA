@@ -31,8 +31,11 @@ def run_dsatur(sessions, conflict_graph, timeslots, rooms):
     for r in rooms.values():
         rooms_by_type[r.room_type].append(r)
 
-    # Track how many rooms of each type are already committed per color
-    color_room_usage = defaultdict(lambda: defaultdict(int))
+    # Track which specific room IDs are occupied per timeslot color
+    slot_occupied_rooms = defaultdict(set)
+
+    # Count how many sessions are assigned to each day so far (updated each step)
+    day_load = defaultdict(int)
 
     for _ in range(n):
         node = pick_next()
@@ -43,23 +46,33 @@ def run_dsatur(sessions, conflict_graph, timeslots, rooms):
         needed_type = get_needed_type(sessions[node])
         student_count = sessions[node].section.student_count
 
-        for c in range(len(timeslots)):
+        # Sort candidate colors: prefer days with fewer sessions, then earlier slots
+        # within that day. This spreads the timetable across the whole week.
+        candidates = sorted(
+            range(len(timeslots)),
+            key=lambda c: (day_load[timeslots[c].day], c)
+        )
+
+        for c in candidates:
             if c in used:
                 continue
 
             if needed_type == "lab":
-                available = [r for r in rooms_by_type["lab"] if r.capacity >= student_count]
+                suitable = [r for r in rooms_by_type["lab"] if r.capacity >= student_count]
             elif needed_type == "classroom":
-                available = [
+                suitable = [
                     r for r in rooms_by_type["classroom"] + rooms_by_type["lecture_hall"]
                     if r.capacity >= student_count
                 ]
             else:  # lecture_hall
-                available = [r for r in rooms_by_type["lecture_hall"] if r.capacity >= student_count]
+                suitable = [r for r in rooms_by_type["lecture_hall"] if r.capacity >= student_count]
 
-            if color_room_usage[c][needed_type] < len(available):
+            free = [r for r in suitable if r.id not in slot_occupied_rooms[c]]
+            if free:
+                chosen = min(free, key=lambda r: r.capacity)
+                slot_occupied_rooms[c].add(chosen.id)
                 color[node] = c
-                color_room_usage[c][needed_type] += 1
+                day_load[timeslots[c].day] += 1
                 break
 
         for j in conflict_graph[node]:
